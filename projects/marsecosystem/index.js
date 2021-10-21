@@ -1,7 +1,6 @@
 const sdk = require("@defillama/sdk");
 const utils = require('../helper/utils');
 const { unwrapUniswapLPs } = require("../helper/unwrapLPs");
-const { transformBscAddress } = require("../helper/portedTokens");
 const abi = require("./abi.json");
 
 const url = 'https://api.marsecosystem.com/api/pools';
@@ -32,7 +31,7 @@ async function staking(timstamp, chainBlocks) {
     localPools.forEach((v, i) => {
       sdk.util.sumSingleBalance(
         balances,
-        `bsc:${v.address}`,
+        `bsc:${v.address.toLowerCase()}`,
         localPoolsBalances[i]
       );
     });
@@ -51,7 +50,7 @@ async function staking(timstamp, chainBlocks) {
     localPools.forEach((v, i) => {
       sdk.util.sumSingleBalance(
         balances,
-        `bsc:${v.address}`,
+        `bsc:${v.address.toLowerCase()}`,
         remotePoolsBalances[i]
       );
     });
@@ -72,20 +71,18 @@ async function calculate(chainBlocks, localPools, remotePools) {
     })
   ).output.map(v => v.output);
 
-  const transformAddress = await transformBscAddress();
-
   const lpPositions = [];
 
   localPools.forEach((v, i) => {
     if (v.baseToken == v.quoteToken) {
       sdk.util.sumSingleBalance(
         balances,
-        `bsc:${v.address}`,
+        `bsc:${v.address.toLowerCase()}`,
         localPoolsBalances[i]
       );
     } else {
       lpPositions.push({
-        token: v.address,
+        token: v.address.toLowerCase(),
         balance: localPoolsBalances[i]
       });
     }
@@ -104,12 +101,12 @@ async function calculate(chainBlocks, localPools, remotePools) {
     if (v.baseToken == v.quoteToken) {
       sdk.util.sumSingleBalance(
         balances,
-        `bsc:${v.address}`,
+        `bsc:${v.address.toLowerCase()}`,
         remotePoolsBalances[i]
       );
     } else {
       lpPositions.push({
-        token: v.address,
+        token: v.address.toLowerCase(),
         balance: remotePoolsBalances[i]
       });
     }
@@ -120,7 +117,7 @@ async function calculate(chainBlocks, localPools, remotePools) {
     lpPositions,
     chainBlocks["bsc"],
     "bsc",
-    transformAddress
+    (addr) => `bsc:${addr.toLowerCase()}`
   );
 
   return balances;
